@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#123b63">
+  <title>INSEA Étudiants</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f5f9;
+      color: #172b4d;
+    }
+    header {
+      background: #123b63;
+      color: white;
+      padding: 28px 20px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 10px; }
+    header p { margin: 0; line-height: 1.5; }
+    main {
+      max-width: 600px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    h2 { font-size: 20px; }
+    .card {
+      background: white;
+      padding: 20px;
+      margin: 14px 0;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #0000000d;
+    }
+    .card h3 { margin-top: 0; }
+    .card p { color: #58677c; line-height: 1.5; }
+    button {
+      width: 100%;
+      padding: 13px;
+      border: 0;
+      border-radius: 8px;
+      background: #123b63;
+      color: white;
+      font-size: 16px;
+    }
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #68768a;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>INSEA</h1>
+    <p>Institut National de Statistique<br>
+    et d'Économie Appliquée</p>
+  </header>
+
+  <main>
+    <h2>Espace Étudiant</h2>
+
+    <section class="card">
+      <h3>📅 Emploi du temps</h3>
+      <p>Consultez votre programme des cours.</p>
+      <button onclick="alert('Emploi du temps bientôt disponible')">
+        Consulter
+      </button>
+    </section>
+
+    <section class="card">
+      <h3>📢 Actualités</h3>
+      <p>Retrouvez les dernières informations de l'institut.</p>
+      <button onclick="alert('Actualités bientôt disponibles')">
+        Consulter
+      </button>
+    </section>
+
+    <section class="card">
+      <h3>📚 Documents</h3>
+      <p>Accédez aux supports de cours et aux documents utiles.</p>
+      <button onclick="alert('Documents bientôt disponibles')">
+        Consulter
+      </button>
+    </section>
+  </main>
+
+  <footer>INSEA Étudiants · Version 1.0</footer>
+</body>
+</html>
