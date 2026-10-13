@@ -1,315 +1,327 @@
-
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#153d60">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>INSEA Résidence</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f2f5f9;color:#1d2939;font-family:Arial,sans-serif}
-header{background:#153d60;color:white;padding:24px 15px;text-align:center}
-header h1{margin:0 0 8px}
-main{max-width:700px;margin:20px auto;padding:0 14px}
-.panel,.student{background:white;border-radius:14px;padding:16px;margin-bottom:15px}
-input,button{font:inherit;padding:12px;border-radius:8px}
-input{width:100%;border:1px solid #ccc;margin:7px 0 12px}
-button{border:0;background:#153d60;color:white;cursor:pointer}
-.secondary{background:#e5edf5;color:#153d60}
-.danger{background:#b42318}
-.toolbar,.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.student{display:flex;gap:12px;align-items:center}
-.student img{width:75px;height:75px;object-fit:cover;border-radius:10px}
-.info{flex:1}
-.info h3{margin:0 0 8px}
-.info p{margin:5px 0;color:#667085}
-label{display:block;font-weight:bold;font-size:14px}
-.hidden{display:none!important}
-.muted{color:#667085;font-size:14px}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#123b35;color:white;padding:22px 16px;text-align:center}
+header h1{margin:0;font-size:23px}
+header p{margin:8px 0 0;font-size:14px}
+main{max-width:650px;margin:20px auto;padding:0 14px}
+.panel{background:white;padding:18px;border-radius:12px;margin-bottom:16px;box-shadow:0 2px 8px #0000000c}
+h2{font-size:18px;margin-top:0}
+input,button{font:inherit}
+input[type=text],input[type=password],input[type=file],input[type=number]{
+width:100%;padding:12px;margin:6px 0 12px;border:1px solid #ccd5d3;border-radius:7px;background:white
+}
+label{font-size:14px;font-weight:bold}
+button{border:0;border-radius:7px;padding:11px 14px;cursor:pointer}
+.primary{background:#176b56;color:white;width:100%;font-weight:bold}
+.secondary{background:#e4eee9;color:#174d3f}
+.danger{background:#fee2e2;color:#991b1b}
+.student{display:flex;gap:12px;align-items:center;border-bottom:1px solid #e5e7eb;padding:13px 0}
+.student:last-child{border-bottom:0}
+.student img{width:65px;height:65px;object-fit:cover;border-radius:9px;background:#e5e7eb}
+.details{flex:1;min-width:0}
+.details h3{margin:0 0 7px;font-size:16px;overflow-wrap:anywhere}
+.details p{margin:4px 0;font-size:14px;color:#52616b}
+.actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.actions button{font-size:13px;padding:8px}
+.hidden{display:none}
+#message{font-size:14px;margin-top:10px}
+footer{text-align:center;color:#64748b;font-size:12px;padding:16px}
 </style>
 </head>
 <body>
 <header>
 <h1>INSEA Résidence</h1>
-<p id="subtitle">Gestion et recherche des résidents</p>
+<p>Gestion et recherche des résidents</p>
 </header>
+
 <main>
-<div class="toolbar">
-<button class="secondary" id="langBtn">العربية</button>
-<button id="adminBtn">Administration</button>
-</div>
 <section class="panel">
-<h2 id="searchTitle">Recherche d'un étudiant</h2>
-<label id="searchLabel">Nom, prénom ou numéro de chambre</label>
-<input id="search" placeholder="Saisir un nom ou une chambre...">
-<p id="count" class="muted"></p>
+<h2>Rechercher un étudiant</h2>
+<input id="search" type="text" placeholder="Nom, prénom ou numéro de chambre">
+<div id="results"></div>
 </section>
-<section class="panel hidden" id="adminPanel">
+
+<section class="panel">
 <h2 id="formTitle">Ajouter un étudiant</h2>
 <form id="studentForm">
-<input type="hidden" id="editId">
-<label id="firstLabel">Prénom</label>
-<input id="firstName" required>
-<label id="lastLabel">Nom</label>
-<input id="lastName" required>
-<label id="roomLabel">Numéro de chambre</label>
-<input id="room" required>
-<label id="floorLabel">Étage</label>
-<input id="floor">
-<label id="blockLabel">Bloc</label>
-<input id="block">
-<label id="photoLabel">Photo de l'étudiant</label>
-<input id="photo" type="file" accept="image/*">
-<button id="saveBtn" type="submit">Enregistrer</button>
-<button id="cancelBtn" class="secondary" type="button">Annuler</button>
-</form>
-<button id="exportBtn" class="secondary">Exporter une sauvegarde</button>
-</section>
-<section id="results"></section>
-</main>
-</body>
-  
-<script>
-const $ = id => document.getElementById(id);
-const KEY = "insea_residence_students";
-let students = [];
-let admin = false;
-let lang = "fr";
-let photoData = "";
+<input id="editId" type="hidden">
 
-const words = {
- fr: {
-  search:"Recherche d'un étudiant",
-  label:"Nom, prénom ou numéro de chambre",
-  placeholder:"Saisir un nom ou une chambre...",
-  admin:"Administration",close:"Fermer l'administration",
-  add:"Ajouter un étudiant",edit:"Modifier un étudiant",
-  first:"Prénom",last:"Nom",room:"Numéro de chambre",
-  floor:"Étage",block:"Bloc",photo:"Photo de l'étudiant",
-  save:"Enregistrer",update:"Mettre à jour",cancel:"Annuler",
-  change:"Modifier",del:"Supprimer",confirm:"Supprimer cet étudiant ?",
-  empty:"Aucun étudiant trouvé.",count:"étudiant(s)",
-  roomText:"Chambre",floorText:"Étage",blockText:"Bloc",
-  password:"Mot de passe administrateur",wrong:"Mot de passe incorrect.",
-  saved:"Étudiant enregistré.",deleted:"Étudiant supprimé.",
-  lang:"العربية"
- },
- ar: {
-  search:"البحث عن طالب",
-  label:"الاسم أو اللقب أو رقم الغرفة",
-  placeholder:"اكتب الاسم أو رقم الغرفة...",
-  admin:"الإدارة",close:"إغلاق الإدارة",
-  add:"إضافة طالب",edit:"تعديل طالب",
-  first:"الاسم",last:"اللقب",room:"رقم الغرفة",
-  floor:"الطابق",block:"البلوك",photo:"صورة الطالب",
-  save:"حفظ",update:"تحديث",cancel:"إلغاء",
-  change:"تعديل",del:"حذف",confirm:"هل تريد حذف هذا الطالب؟",
-  empty:"لم يتم العثور على أي طالب.",count:"طالب",
-  roomText:"الغرفة",floorText:"الطابق",blockText:"البلوك",
-  password:"كلمة مرور الإدارة",wrong:"كلمة المرور غير صحيحة.",
-  saved:"تم حفظ الطالب.",deleted:"تم حذف الطالب.",
-  lang:"Français"
- }
-};
-function t(k){return words[lang][k]||k}
+<label for="firstName">Prénom</label>
+<input id="firstName" type="text" required maxlength="60">
+
+<label for="lastName">Nom</label>
+<input id="lastName" type="text" required maxlength="60">
+
+<label for="room">Numéro de chambre</label>
+<input id="room" type="text" required maxlength="30">
+
+<label for="building">Bâtiment / Pavillon</label>
+<input id="building" type="text" maxlength="60">
+
+<label for="photo">Photo personnelle</label>
+<input id="photo" type="file" accept="image/*">
+<img id="preview" class="hidden" alt="Aperçu de la photo"
+style="width:90px;height:90px;object-fit:cover;border-radius:8px;margin-bottom:12px">
+
+<button class="primary" type="submit">Enregistrer l'étudiant</button>
+<button class="secondary hidden" id="cancelEdit" type="button"
+style="width:100%;margin-top:8px">Annuler la modification</button>
+<p id="message" role="status"></p>
+</form>
+</section>
+
+<section class="panel">
+<h2>Liste des étudiants</h2>
+<p id="count">0 étudiant</p>
+<button class="secondary" id="exportBtn" type="button">
+Exporter une sauvegarde JSON
+</button>
+<p style="font-size:12px;color:#64748b">
+Les données sont enregistrées dans ce navigateur.
+Exportez régulièrement une sauvegarde.
+</p>
+</section>
+</main>
+
+<footer>INSEA Résidence · Gestion des résidents</footer>
+
+<script>
+const KEY = "insea_residents_v1";
+let students = [];
+let currentPhoto = "";
+let storageAvailable = true;
 
 try {
- students=JSON.parse(localStorage.getItem(KEY)||"[]");
- if(!Array.isArray(students)) students=[];
-} catch(e) { students=[]; }
+  students = JSON.parse(localStorage.getItem(KEY) || "[]");
+  if (!Array.isArray(students)) students = [];
+} catch(e) {
+  students = [];
+  storageAvailable = false;
+}
 
-function saveData(){
- try{
-  localStorage.setItem(KEY,JSON.stringify(students));
-  return true;
- }catch(e){
-  alert("Stockage insuffisant. Choisissez une photo plus petite.");
-  return false;
- }
-}
-function language(){
- document.documentElement.lang=lang;
- document.documentElement.dir=lang==="ar"?"rtl":"ltr";
- $("searchTitle").textContent=t("search");
- $("searchLabel").textContent=t("label");
- $("search").placeholder=t("placeholder");
- $("adminBtn").textContent=admin?t("close"):t("admin");
- $("langBtn").textContent=t("lang");
- $("formTitle").textContent=$("editId").value?t("edit"):t("add");
- $("firstLabel").textContent=t("first");
- $("lastLabel").textContent=t("last");
- $("roomLabel").textContent=t("room");
- $("floorLabel").textContent=t("floor");
- $("blockLabel").textContent=t("block");
- $("photoLabel").textContent=t("photo");
- $("saveBtn").textContent=$("editId").value?t("update"):t("save");
- $("cancelBtn").textContent=t("cancel");
- render();
-}
-function safe(s){
- return String(s||"").replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",
-  '"':"&quot;","'":"&#39;"
- }[c]));
-}
-function render(){
- const q=$("search").value.trim().toLowerCase();
- const found=students.filter(s=>
-  [s.first,s.last,s.room,s.floor,s.block]
-   .some(v=>String(v||"").toLowerCase().includes(q))
- );
- $("count").textContent=found.length+" "+t("count");
- const results=$("results");
- results.replaceChildren();
- if(!found.length){
-  const p=document.createElement("div");
-  p.className="panel muted";
-  p.textContent=t("empty");
-  results.appendChild(p);
-  return;
- }
- found.forEach(s=>{
-  const card=document.createElement("article");
-  card.className="student";
-  if(s.photo){
-   const img=document.createElement("img");
-   img.src=s.photo;img.alt=t("photo");
-   card.appendChild(img);
+const $ = id => document.getElementById(id);
+const form = $("studentForm");
+
+function save() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(students));
+    storageAvailable = true;
+    return true;
+  } catch(e) {
+    storageAvailable = false;
+    $("message").textContent =
+      "Stockage insuffisant. Réduisez la taille des photos ou exportez vos données.";
+    return false;
   }
-  const info=document.createElement("div");
-  info.className="info";
-  const name=document.createElement("h3");
-  name.textContent=s.first+" "+s.last;
-  info.appendChild(name);
-  [[t("roomText"),s.room],[t("floorText"),s.floor],
-   [t("blockText"),s.block]].forEach(([label,value])=>{
-    if(value){
-     const p=document.createElement("p");
-     p.textContent=label+": "+value;
-     info.appendChild(p);
+}
+
+function render() {
+  const query = $("search").value.trim().toLocaleLowerCase("fr");
+  const filtered = students.filter(s =>
+    [s.firstName, s.lastName, s.room, s.building]
+      .some(v => (v || "").toLocaleLowerCase("fr").includes(query))
+  );
+
+  $("count").textContent = students.length + " étudiant(s)";
+  $("results").replaceChildren();
+
+  if (!filtered.length) {
+    $("results").textContent = query
+      ? "Aucun étudiant trouvé."
+      : "Aucun étudiant enregistré.";
+    return;
+  }
+
+  filtered.forEach(s => {
+    const card = document.createElement("div");
+    card.className = "student";
+
+    const img = document.createElement("img");
+    img.alt = "Photo de l'étudiant";
+    img.src = s.photo || "data:image/svg+xml," +
+      encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="100%" height="100%" fill="#dbe5e2"/><circle cx="40" cy="29" r="14" fill="#8ca39b"/><path d="M12 78 Q14 49 40 49 Q66 49 68 78" fill="#8ca39b"/></svg>');
+
+    const details = document.createElement("div");
+    details.className = "details";
+
+    const name = document.createElement("h3");
+    name.textContent = s.firstName + " " + s.lastName;
+
+    const room = document.createElement("p");
+    room.textContent = "Chambre : " + s.room;
+
+    details.append(name, room);
+
+    if (s.building) {
+      const building = document.createElement("p");
+      building.textContent = "Bâtiment : " + s.building;
+      details.append(building);
     }
-   });
-  if(admin){
-   const actions=document.createElement("div");
-   actions.className="actions";
-   const edit=document.createElement("button");
-   edit.textContent=t("change");
-   edit.onclick=()=>editStudent(s.id);
-   const del=document.createElement("button");
-   del.className="danger";
-   del.textContent=t("del");
-   del.onclick=()=>deleteStudent(s.id);
-   actions.append(edit,del);
-   info.appendChild(actions);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const edit = document.createElement("button");
+    edit.className = "secondary";
+    edit.textContent = "Modifier";
+    edit.onclick = () => editStudent(s.id);
+
+    const del = document.createElement("button");
+    del.className = "danger";
+    del.textContent = "Supprimer";
+    del.onclick = () => deleteStudent(s.id);
+
+    actions.append(edit, del);
+    details.append(actions);
+    card.append(img, details);
+    $("results").append(card);
+  });
+}
+
+function resetForm() {
+  form.reset();
+  $("editId").value = "";
+  $("formTitle").textContent = "Ajouter un étudiant";
+  $("cancelEdit").classList.add("hidden");
+  $("preview").classList.add("hidden");
+  $("preview").removeAttribute("src");
+  currentPhoto = "";
+}
+
+$("photo").addEventListener("change", () => {
+  const file = $("photo").files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    $("message").textContent = "Veuillez choisir une image.";
+    $("photo").value = "";
+    return;
   }
-  card.appendChild(info);
-  results.appendChild(card);
- });
-}
-function resetForm(){
- $("studentForm").reset();
- $("editId").value="";
- photoData="";
- language();
-}
-function editStudent(id){
- const s=students.find(x=>x.id===id);
- if(!s)return;
- $("editId").value=s.id;
- $("firstName").value=s.first;
- $("lastName").value=s.last;
- $("room").value=s.room;
- $("floor").value=s.floor||"";
- $("block").value=s.block||"";
- photoData=s.photo||"";
- language();
- $("adminPanel").classList.remove("hidden");
- window.scrollTo({top:0,behavior:"smooth"});
-}
-function deleteStudent(id){
- if(!confirm(t("confirm")))return;
- const old=students;
- students=students.filter(s=>s.id!==id);
- if(saveData()){
-  render();alert(t("deleted"));
- }else students=old;
-}
-$("search").addEventListener("input",render);
-$("langBtn").addEventListener("click",()=>{
- lang=lang==="fr"?"ar":"fr";
- language();
-});
-$("adminBtn").addEventListener("click",()=>{
- if(!admin){
-  const pin=prompt(t("password"));
-  if(pin===null)return;
-  if(pin!=="1234"){alert(t("wrong"));return;}
- }
- admin=!admin;
- $("adminPanel").classList.toggle("hidden",!admin);
- if(!admin)resetForm();
- language();
-});
-$("cancelBtn").addEventListener("click",resetForm);
 
-$("photo").addEventListener("change",e=>{
- const file=e.target.files[0];
- if(!file)return;
- const reader=new FileReader();
- reader.onload=()=>{
-  const img=new Image();
-  img.onload=()=>{
-   const scale=Math.min(1,500/Math.max(img.width,img.height));
-   const canvas=document.createElement("canvas");
-   canvas.width=Math.round(img.width*scale);
-   canvas.height=Math.round(img.height*scale);
-   canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-   photoData=canvas.toDataURL("image/jpeg",0.7);
+  if (file.size > 700 * 1024) {
+    $("message").textContent =
+      "Photo trop volumineuse. Choisissez une image de moins de 700 Ko.";
+    $("photo").value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    currentPhoto = reader.result;
+    $("preview").src = currentPhoto;
+    $("preview").classList.remove("hidden");
   };
-  img.onerror=()=>alert("Image invalide.");
-  img.src=reader.result;
- };
- reader.onerror=()=>alert("Impossible de lire la photo.");
- reader.readAsDataURL(file);
+  reader.readAsDataURL(file);
 });
 
-$("studentForm").addEventListener("submit",e=>{
- e.preventDefault();
- if(!admin)return;
- const id=$("editId").value||String(Date.now())+Math.random();
- const old=students;
- const previous=students.find(s=>s.id===id);
- const student={
-  id,
-  first:$("firstName").value.trim(),
-  last:$("lastName").value.trim(),
-  room:$("room").value.trim(),
-  floor:$("floor").value.trim(),
-  block:$("block").value.trim(),
-  photo:photoData||(previous?previous.photo:"")
- };
- students=previous
-  ?students.map(s=>s.id===id?student:s)
-  :[student,...students];
- if(saveData()){
+form.addEventListener("submit", e => {
+  e.preventDefault();
+
+  const id = $("editId").value;
+  const old = students.find(s => s.id === id);
+
+  const student = {
+    id: id || (Date.now().toString() + Math.random().toString(16).slice(2)),
+    firstName: $("firstName").value.trim(),
+    lastName: $("lastName").value.trim(),
+    room: $("room").value.trim(),
+    building: $("building").value.trim(),
+    photo: currentPhoto || (old ? old.photo : "")
+  };
+
+  if (!student.firstName || !student.lastName || !student.room) {
+    $("message").textContent = "Veuillez remplir les champs obligatoires.";
+    return;
+  }
+
+  if (students.some(s => s.id !== id &&
+      s.firstName.toLocaleLowerCase("fr") === student.firstName.toLocaleLowerCase("fr") &&
+      s.lastName.toLocaleLowerCase("fr") === student.lastName.toLocaleLowerCase("fr") &&
+      s.room.toLocaleLowerCase("fr") === student.room.toLocaleLowerCase("fr"))) {
+    $("message").textContent = "Cet étudiant figure déjà dans cette chambre.";
+    return;
+  }
+
+  const previous = students.slice();
+
+  if (id) {
+    students = students.map(s => s.id === id ? student : s);
+  } else {
+    students.push(student);
+  }
+
+  if (!save()) {
+    students = previous;
+    return;
+  }
+
   resetForm();
+  $("message").textContent = "Étudiant enregistré avec succès.";
   render();
-  alert(t("saved"));
- }else students=old;
 });
 
-$("exportBtn").addEventListener("click",()=>{
- const blob=new Blob([JSON.stringify(students)],{type:"application/json"});
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");
- a.href=url;a.download="insea-backup.json";a.click();
- URL.revokeObjectURL(url);
+function editStudent(id) {
+  const s = students.find(s => s.id === id);
+  if (!s) return;
+
+  $("editId").value = s.id;
+  $("firstName").value = s.firstName;
+  $("lastName").value = s.lastName;
+  $("room").value = s.room;
+  $("building").value = s.building || "";
+  currentPhoto = s.photo || "";
+
+  if (currentPhoto) {
+    $("preview").src = currentPhoto;
+    $("preview").classList.remove("hidden");
+  } else {
+    $("preview").classList.add("hidden");
+  }
+
+  $("formTitle").textContent = "Modifier un étudiant";
+  $("cancelEdit").classList.remove("hidden");
+  $("formTitle").scrollIntoView({behavior:"smooth"});
+}
+
+function deleteStudent(id) {
+  const s = students.find(s => s.id === id);
+  if (!s || !confirm("Supprimer " + s.firstName + " " + s.lastName + " ?")) return;
+
+  const previous = students.slice();
+  students = students.filter(s => s.id !== id);
+
+  if (!save()) {
+    students = previous;
+    return;
+  }
+
+  $("message").textContent = "Étudiant supprimé.";
+  render();
+}
+
+$("cancelEdit").addEventListener("click", resetForm);
+$("search").addEventListener("input", render);
+
+$("exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(students, null, 2)], {
+    type: "application/json"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "insea-residents-backup.json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 
-language();
+render();
 </script>
-
+</body>
 </html>
-
