@@ -44,7 +44,12 @@ footer{text-align:center;color:#64748b;font-size:12px;padding:16px}
 <main>
 <section class="panel">
 <h2>Rechercher un étudiant</h2>
-<input id="search" type="text" placeholder="Nom, prénom ou numéro de chambre">
+<input id="search" type="text"
+placeholder="Nom, prénom ou numéro de chambre"><button class="secondary" id="toggleList" type="button"
+style="width:100%;margin-bottom:12px">
+Afficher tous les étudiants
+</button>
+
 <div id="results"></div>
 </section>
 
@@ -123,20 +128,84 @@ function save() {
 }
 
 function render() {
-  const query = $("search").value.trim().toLocaleLowerCase("fr");
-  const filtered = students.filter(s =>
-    [s.firstName, s.lastName, s.room, s.building]
-      .some(v => (v || "").toLocaleLowerCase("fr").includes(query))
-  );
+  let showAllStudents = false;
 
-  $("count").textContent = students.length + " étudiant(s)";
-  $("results").replaceChildren();
+function render() {
+const query = $("search").value.trim().toLocaleLowerCase("fr");
 
-  if (!filtered.length) {
-    $("results").textContent = query
-      ? "Aucun étudiant trouvé."
-      : "Aucun étudiant enregistré.";
-    return;
+const filtered = students.filter(s =>
+[s.firstName, s.lastName, s.room, s.building]
+.some(v => (v || "").toLocaleLowerCase("fr").includes(query))
+);
+
+$("count").textContent = students.length + " étudiant(s)";
+$("results").replaceChildren();
+
+if (!query && !showAllStudents) {
+$("results").textContent = "Recherchez un étudiant ou affichez la liste complète.";
+return;
+}
+
+if (!filtered.length) {
+$("results").textContent = "Aucun étudiant trouvé.";
+return;
+}
+
+filtered.forEach(s => {
+const card = document.createElement("div");
+card.className = "student";
+
+const img = document.createElement("img");
+img.alt = "Photo de l'étudiant";
+img.src = s.photo || "";
+
+const details = document.createElement("div");
+details.className = "details";
+
+const name = document.createElement("h3");
+name.textContent = s.firstName + " " + s.lastName;
+
+const room = document.createElement("p");
+room.textContent = "Chambre : " + s.room;
+
+details.append(name, room);
+
+if (s.building) {
+  const building = document.createElement("p");
+  building.textContent = "Bâtiment : " + s.building;
+  details.append(building);
+}
+
+const actions = document.createElement("div");
+actions.className = "actions";
+
+const edit = document.createElement("button");
+edit.className = "secondary";
+edit.textContent = "Modifier";
+edit.onclick = () => editStudent(s.id);
+
+const del = document.createElement("button");
+del.className = "danger";
+del.textContent = "Supprimer";
+del.onclick = () => deleteStudent(s.id);
+
+actions.append(edit, del);
+details.append(actions);
+card.append(img, details);
+$("results").append(card);
+
+});
+}
+
+$("toggleList").addEventListener("click", () => {
+showAllStudents = !showAllStudents;
+
+$("toggleList").textContent = showAllStudents
+? "Masquer la liste des étudiants"
+: "Afficher tous les étudiants";
+
+render();
+});
   }
 
   filtered.forEach(s => {
@@ -214,11 +283,44 @@ $("photo").addEventListener("change", () => {
 
   const reader = new FileReader();
   reader.onload = () => {
-    currentPhoto = reader.result;
-    $("preview").src = currentPhoto;
-    $("preview").classList.remove("hidden");
-  };
-  reader.readAsDataURL(file);
+const img = new Image();
+
+img.onload = () => {
+const canvas = document.createElement("canvas");
+const maxSize = 600;
+
+let width = img.width;
+let height = img.height;
+
+if (width > height && width > maxSize) {
+  height = Math.round(height * maxSize / width);
+  width = maxSize;
+} else if (height >= width && height > maxSize) {
+  width = Math.round(width * maxSize / height);
+  height = maxSize;
+}
+
+canvas.width = width;
+canvas.height = height;
+
+const ctx = canvas.getContext("2d");
+ctx.drawImage(img, 0, 0, width, height);
+
+currentPhoto = canvas.toDataURL("image/jpeg", 0.75);
+
+$("preview").src = currentPhoto;
+$("preview").classList.remove("hidden");
+
+};
+
+img.onerror = () => {
+$("message").textContent = "Impossible de lire cette image.";
+};
+
+img.src = reader.result;
+};
+
+reader.readAsDataURL(file);
 });
 
 form.addEventListener("submit", e => {
