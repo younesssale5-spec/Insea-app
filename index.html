@@ -142,7 +142,8 @@ $("count").textContent = students.length + " étudiant(s)";
 $("results").replaceChildren();
 
 if (!query && !showAllStudents) {
-$("results").textContent = "Recherchez un étudiant ou affichez la liste complète.";
+$("results").textContent =
+"Recherchez un étudiant ou affichez la liste complète.";
 return;
 }
 
@@ -206,54 +207,8 @@ $("toggleList").textContent = showAllStudents
 
 render();
 });
-  }
-
-  filtered.forEach(s => {
-    const card = document.createElement("div");
-    card.className = "student";
-
-    const img = document.createElement("img");
-    img.alt = "Photo de l'étudiant";
-    img.src = s.photo || "data:image/svg+xml," +
-      encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="100%" height="100%" fill="#dbe5e2"/><circle cx="40" cy="29" r="14" fill="#8ca39b"/><path d="M12 78 Q14 49 40 49 Q66 49 68 78" fill="#8ca39b"/></svg>');
-
-    const details = document.createElement("div");
-    details.className = "details";
-
-    const name = document.createElement("h3");
-    name.textContent = s.firstName + " " + s.lastName;
-
-    const room = document.createElement("p");
-    room.textContent = "Chambre : " + s.room;
-
-    details.append(name, room);
-
-    if (s.building) {
-      const building = document.createElement("p");
-      building.textContent = "Bâtiment : " + s.building;
-      details.append(building);
-    }
-
-    const actions = document.createElement("div");
-    actions.className = "actions";
-
-    const edit = document.createElement("button");
-    edit.className = "secondary";
-    edit.textContent = "Modifier";
-    edit.onclick = () => editStudent(s.id);
-
-    const del = document.createElement("button");
-    del.className = "danger";
-    del.textContent = "Supprimer";
-    del.onclick = () => deleteStudent(s.id);
-
-    actions.append(edit, del);
-    details.append(actions);
-    card.append(img, details);
-    $("results").append(card);
-  });
 }
-
+  
 function resetForm() {
   form.reset();
   $("editId").value = "";
