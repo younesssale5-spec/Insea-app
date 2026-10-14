@@ -113,6 +113,7 @@ try {
 
 const $ = id => document.getElementById(id);
 const form = $("studentForm");
+let photoProcessing = Promise.resolve();
 
 function save() {
   try {
@@ -122,18 +123,15 @@ function save() {
   } catch(e) {
     storageAvailable = false;
     $("message").textContent =
-      "Stockage insuffisant. Réduisez la taille des photos ou exportez vos données.";
+      "Stockage plein ou indisponible. Réduisez les photos, exportez une sauvegarde ou supprimez des données inutiles.";
     return false;
   }
 }
 
-function render() {
-  
 let showAllStudents = false;
 
 function render() {
   const query = $("search").value.trim().toLocaleLowerCase("fr");
-
   const filtered = students.filter(s =>
     [s.firstName, s.lastName, s.room, s.building]
       .some(v => (v || "").toLocaleLowerCase("fr").includes(query))
@@ -159,7 +157,7 @@ function render() {
 
     const img = document.createElement("img");
     img.alt = "Photo de l'étudiant";
-    img.src = s.photo || "";
+    if (s.photo) img.src = s.photo;
 
     const details = document.createElement("div");
     details.className = "details";
@@ -169,7 +167,6 @@ function render() {
 
     const room = document.createElement("p");
     room.textContent = "Chambre : " + s.room;
-
     details.append(name, room);
 
     if (s.building) {
@@ -182,14 +179,16 @@ function render() {
     actions.className = "actions";
 
     const edit = document.createElement("button");
+    edit.type = "button";
     edit.className = "secondary";
     edit.textContent = "Modifier";
-    edit.onclick = () => editStudent(s.id);
+    edit.addEventListener("click", () => editStudent(s.id));
 
     const del = document.createElement("button");
+    del.type = "button";
     del.className = "danger";
     del.textContent = "Supprimer";
-    del.onclick = () => deleteStudent(s.id);
+    del.addEventListener("click", () => deleteStudent(s.id));
 
     actions.append(edit, del);
     details.append(actions);
@@ -200,15 +199,12 @@ function render() {
 
 $("toggleList").addEventListener("click", () => {
   showAllStudents = !showAllStudents;
-
   $("toggleList").textContent = showAllStudents
     ? "Masquer la liste des étudiants"
     : "Afficher tous les étudiants";
-
   render();
 });
-}
-  
+
 function resetForm() {
   form.reset();
   $("editId").value = "";
@@ -229,57 +225,52 @@ $("photo").addEventListener("change", () => {
     return;
   }
 
-  if (file.size > 700 * 1024) {
-    $("message").textContent =
-      "Photo trop volumineuse. Choisissez une image de moins de 700 Ko.";
+  if (file.size > 5 * 1024 * 1024) {
+    $("message").textContent = "Photo trop volumineuse. Choisissez une image de moins de 5 Mo.";
     $("photo").value = "";
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = () => {
-const img = new Image();
+  $("message").textContent = "Préparation de la photo…";
+  photoProcessing = (async () => {
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Lecture impossible"));
+        reader.readAsDataURL(file);
+      });
 
-img.onload = () => {
-const canvas = document.createElement("canvas");
-const maxSize = 600;
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("Image illisible"));
+        image.src = dataUrl;
+      });
 
-let width = img.width;
-let height = img.height;
+      const canvas = document.createElement("canvas");
+      const maxSize = 480;
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
 
-if (width > height && width > maxSize) {
-  height = Math.round(height * maxSize / width);
-  width = maxSize;
-} else if (height >= width && height > maxSize) {
-  width = Math.round(width * maxSize / height);
-  height = maxSize;
-}
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas indisponible");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-canvas.width = width;
-canvas.height = height;
-
-const ctx = canvas.getContext("2d");
-ctx.drawImage(img, 0, 0, width, height);
-
-currentPhoto = canvas.toDataURL("image/jpeg", 0.75);
-
-$("preview").src = currentPhoto;
-$("preview").classList.remove("hidden");
-
-};
-
-img.onerror = () => {
-$("message").textContent = "Impossible de lire cette image.";
-};
-
-img.src = reader.result;
-};
-
-reader.readAsDataURL(file);
+      currentPhoto = canvas.toDataURL("image/jpeg", 0.65);
+      $("preview").src = currentPhoto;
+      $("preview").classList.remove("hidden");
+      $("message").textContent = "Photo prête à être enregistrée.";
+    } catch (error) {
+      $("message").textContent = "Impossible de préparer cette photo. Essayez une autre image.";
+    }
+  })();
 });
 
-form.addEventListener("submit", e => {
+form.addEventListener("submit", async e => {
   e.preventDefault();
+  await photoProcessing;
 
   const id = $("editId").value;
   const old = students.find(s => s.id === id);
