@@ -128,84 +128,84 @@ function save() {
 }
 
 function render() {
-  let showAllStudents = false;
+  
+let showAllStudents = false;
 
 function render() {
-const query = $("search").value.trim().toLocaleLowerCase("fr");
+  const query = $("search").value.trim().toLocaleLowerCase("fr");
 
-const filtered = students.filter(s =>
-[s.firstName, s.lastName, s.room, s.building]
-.some(v => (v || "").toLocaleLowerCase("fr").includes(query))
-);
+  const filtered = students.filter(s =>
+    [s.firstName, s.lastName, s.room, s.building]
+      .some(v => (v || "").toLocaleLowerCase("fr").includes(query))
+  );
 
-$("count").textContent = students.length + " étudiant(s)";
-$("results").replaceChildren();
+  $("count").textContent = students.length + " étudiant(s)";
+  $("results").replaceChildren();
 
-if (!query && !showAllStudents) {
-$("results").textContent =
-"Recherchez un étudiant ou affichez la liste complète.";
-return;
-}
+  if (!query && !showAllStudents) {
+    $("results").textContent =
+      "Recherchez un étudiant ou affichez la liste complète.";
+    return;
+  }
 
-if (!filtered.length) {
-$("results").textContent = "Aucun étudiant trouvé.";
-return;
-}
+  if (!filtered.length) {
+    $("results").textContent = "Aucun étudiant trouvé.";
+    return;
+  }
 
-filtered.forEach(s => {
-const card = document.createElement("div");
-card.className = "student";
+  filtered.forEach(s => {
+    const card = document.createElement("div");
+    card.className = "student";
 
-const img = document.createElement("img");
-img.alt = "Photo de l'étudiant";
-img.src = s.photo || "";
+    const img = document.createElement("img");
+    img.alt = "Photo de l'étudiant";
+    img.src = s.photo || "";
 
-const details = document.createElement("div");
-details.className = "details";
+    const details = document.createElement("div");
+    details.className = "details";
 
-const name = document.createElement("h3");
-name.textContent = s.firstName + " " + s.lastName;
+    const name = document.createElement("h3");
+    name.textContent = s.firstName + " " + s.lastName;
 
-const room = document.createElement("p");
-room.textContent = "Chambre : " + s.room;
+    const room = document.createElement("p");
+    room.textContent = "Chambre : " + s.room;
 
-details.append(name, room);
+    details.append(name, room);
 
-if (s.building) {
-  const building = document.createElement("p");
-  building.textContent = "Bâtiment : " + s.building;
-  details.append(building);
-}
+    if (s.building) {
+      const building = document.createElement("p");
+      building.textContent = "Bâtiment : " + s.building;
+      details.append(building);
+    }
 
-const actions = document.createElement("div");
-actions.className = "actions";
+    const actions = document.createElement("div");
+    actions.className = "actions";
 
-const edit = document.createElement("button");
-edit.className = "secondary";
-edit.textContent = "Modifier";
-edit.onclick = () => editStudent(s.id);
+    const edit = document.createElement("button");
+    edit.className = "secondary";
+    edit.textContent = "Modifier";
+    edit.onclick = () => editStudent(s.id);
 
-const del = document.createElement("button");
-del.className = "danger";
-del.textContent = "Supprimer";
-del.onclick = () => deleteStudent(s.id);
+    const del = document.createElement("button");
+    del.className = "danger";
+    del.textContent = "Supprimer";
+    del.onclick = () => deleteStudent(s.id);
 
-actions.append(edit, del);
-details.append(actions);
-card.append(img, details);
-$("results").append(card);
-
-});
+    actions.append(edit, del);
+    details.append(actions);
+    card.append(img, details);
+    $("results").append(card);
+  });
 }
 
 $("toggleList").addEventListener("click", () => {
-showAllStudents = !showAllStudents;
+  showAllStudents = !showAllStudents;
 
-$("toggleList").textContent = showAllStudents
-? "Masquer la liste des étudiants"
-: "Afficher tous les étudiants";
+  $("toggleList").textContent = showAllStudents
+    ? "Masquer la liste des étudiants"
+    : "Afficher tous les étudiants";
 
-render();
+  render();
 });
 }
   
